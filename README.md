@@ -22,11 +22,11 @@ $ curl -L cpanmin.us | perl - --sudo App::cpanminus
 /path/to/managedb.pl daemon
 4. Open your browser and load the app's home page which should be http://127.0.0.1:3000/.
 Enter the path to the database file you want to manage. 
-**Note that if the db file doesn't exist it will be automatically created.**
+*Note that if the db file doesn't exist it will be automatically created.*
 
 --------------------------
 
-*IMPORTANT: the SQLite database file should have write access permissions*
+**IMPORTANT: the SQLite database file should have write access permissions**
 
 You can always extend the application's functionality. 
 For more information please read the Mojolicious documentation:
