@@ -22,8 +22,8 @@ cpanm --installdeps
 * Start the application:
 /path/to/managedb.pl daemon
 * Open your browser and load the app's home page which should be http://127.0.0.1:3000/. 
-Enter the path to the database file you want to manage.\n
-*Note that if the db file doesn't exist it will be automatically created.*
+Enter the path to the database file you want to manage.
+[*Note that if the db file doesn't exist it will be automatically created.*]
 
 --------------------------
 
