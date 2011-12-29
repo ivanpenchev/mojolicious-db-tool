@@ -16,7 +16,6 @@ HOW-TO INSTALL
 perl Makefile.PL
 cpanm --installdeps
 </pre>
-
 *Note that if  you don't have cpanm, you can install it like this:*
 <pre>$ curl -L cpanmin.us | perl - --sudo App::cpanminus</pre>
 
