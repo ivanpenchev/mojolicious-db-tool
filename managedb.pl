@@ -35,8 +35,8 @@ post '/database/choose' => sub {
 
 get '/table/structure/:table_name' => sub {
 	my $self = shift;
-	my $table = $self->param('table_name');
-	my $table_structure = $self->db->selectall_arrayref( qq { PRAGMA table_info($table) }, { Slice => {} });
+	my $table_name = $self->param('table_name');
+	my $table_structure = $self->db->selectall_arrayref( q { PRAGMA table_info(?) }, { Slice => {} }, $table_name);
 	$self->stash( 'table' => $table_structure );
 	$self -> render;
 } => 'table';
@@ -341,14 +341,15 @@ __DATA__
 	<thead>
 		<tr> 
 			<th class="header">#</th> <th class="yellow">Column</th> <th class="blue">Type</th> <th>Not NULL</th> 
-			<th class="green">Primary Key</th> <th>Unique</th>
+			<th class="green">Primary Key</th>
 		</tr>
 	</thead>
 	<tbody>
 		% foreach my $row (@$table) {
 			<tr> 
 				<td style="width:15px;"><%= $row->{cid} %></td> <td><%= $row->{name} %></td>
-				<td> <%= $row->{notnull} %></td> <td> <%= $row->{pk} %> </td>
+				<td> <%= $row->{type} %></td> <td> <%= $row->{notnull} %></td> 
+				<td> <%= $row->{pk} %> </td>
 			</tr>
 		% }
 	</tbody>
