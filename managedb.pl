@@ -176,7 +176,7 @@ __DATA__
 @@ new-table.html.ep
 % title 'Create new table';
 % layout 'main';
-<h2>Create new Table &raquo; <%= $table_name %></h2>
+<h2>Create new table &raquo; <%= $table_name %></h2>
 <form method="post" action="">
 	<table>
 		<thead>
@@ -188,8 +188,24 @@ __DATA__
 				
 				<tr>
 					<td> <input type="text" class="span4" name="column_<%= $i %>_name" /> </td>
-					<td> <input type="text" class="span4" name="column_<%= $i %>_type" /> </td>
-					<td> <input type="text" name="column_<%= $i %>_default" /> </td>
+					<td>
+						<select class="span4" name="column_<%= $i %>_type">
+							<option value="">any</option>
+							<option value="integer">integer</option>
+							<option value="real">real</option>
+							<option value="blob">blob</option>
+							<option value="smallint">smallint</option>
+							<option value="float">float</option>
+							<option value="double">double</option>
+							<option value="varchar">varchar</option>
+							<option value="text">text</option>
+							<option value="boolean">boolean</option>
+							<option value="date">date</option>
+							<option value="timestamp">timestamp</option>
+							<option value="binary">binary</option>
+						</select>
+					</td>
+					<td> <input type="text" class="span4" name="column_<%= $i %>_default" /> </td>
 					<td> <input type="checkbox" name="column_<%= $i %>_pk" /> </td>
 					<td> <input type="checkbox" name="column_<%= $i %>_ai" /> </td>
 					<td> <input type="checkbox" name="column_<%= $i %>_notnull" /> </td>
