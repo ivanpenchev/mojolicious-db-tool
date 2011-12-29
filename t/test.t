@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More	tests => 26;
+use Test::More	tests => 47;
 use Test::Mojo;
 use FindBin		'$Bin';
 use File::Temp	'tempfile';
@@ -48,6 +48,47 @@ $t 	-> get_ok('/table/browse/first') -> status_is(200)
 	-> text_like( 'thead tr:nth-child(1) th:nth-child(2)', qr/bar/ )
 	-> text_like( 'tbody tr:nth-child(1) td:nth-child(1)', qr/O/)
 	-> text_like( 'tbody tr:nth-child(1) td:nth-child(2)', qr/HAI!/);
+
+# now lets test the creation of new table containing 4 columns
+$t 	-> get_ok('/table/new?table_name=tests&table_cols_num=4') -> status_is(200);
+$t 	-> post_form_ok('/table/new', {
+	table_name=>'tests', table_cols_num=>4,
+	column_1_name => 'id', column_1_type => 'integer', column_1_ai => 1, column_1_pk => 1, column_1_notnull => 1,
+	column_2_name => 'test_name', column_2_type => 'varchar', column_2_notnull => 1,
+	column_3_name => 'test_txt_result', column_3_type => 'text', column_3_notnull => 1,
+	column_4_name => 'test_result', column_4_type => 'int', column_4_default => 1, column_4_notnull => 1
+}) -> status_is(200);
+
+# is the redirection correct?
+like($t->tx->req->url, qr|/database/?$|, 'right url (redirect)');
+
+# is the ne table created?
+$t 	-> get_ok('/database/') -> status_is(200)
+	-> text_like( 'tbody tr:last-child td:first-child a', qr/tests/);
+
+# check if insert page is displayed correct
+$t 	-> get_ok('/table/insert/tests') -> status_is(200)
+	-> text_like( title => qr/Insert element into table tests/ )
+	-> text_like( 'form div:nth-child(1) label:first-child', qr/id/ )
+	-> text_like( 'form div:nth-child(4) label:first-child', qr/test_result/);
+
+# now try to insert something into the newly created table
+$t 	-> post_form_ok('/table/insert/tests', {
+	test_name => 'Insertion test',
+	test_txt_result => 'Passed/Completed',
+	test_result => 1
+}) -> status_is(200);
+
+# is the redirection correct?
+like($t->tx->req->url, qr|/database/?$|, 'right url (redirect)');
+
+# now try to empty the newly created table
+$t 	-> 	get_ok('/table/empty/tests') -> status_is(200);
+# is the redirection correct?
+like($t->tx->req->url, qr|/database/?$|, 'right url (redirect)');
+
+# and finaly lets try to drop the table
+$t 	-> get_ok('/table/drop/tests') -> status_is(200);
 
 # delete the temporary database file
 unlink $tempfn;
