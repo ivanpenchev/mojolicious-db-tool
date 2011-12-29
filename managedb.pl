@@ -4,25 +4,39 @@ use DBI;
 my $ver = '0.1';
 app->secret('hDfj3LkNr57wsV');
 
-get '/' => sub {
+helper db => sub {
 	my $self = shift;
-} => 'index';
+
+	return DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1}) if
+		defined $self->session->{dbfile};
+
+	$self->redirect_to('/');
+	return;
+};
+
+get '/' => 'index';
 
 get '/database' => sub {
 	my $self = shift;
-	my $conn = DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1});
-	my $tables = $conn->selectall_arrayref( qq{ SELECT * FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence' }, { Slice => {} });
+	my $tables = $self->db->selectall_arrayref( qq{ SELECT * FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence' }, { Slice => {} });
+
 	$self -> stash('database' => $self->session->{dbfile});
 	$self -> stash('tables' => $tables);
 	$self -> render;
-	print $tables;
 } => 'database';
+
+post '/database/choose' => sub {
+	my $self = shift;
+	my $dbfile = $self->param('dbfile');
+	
+	$self -> session->{dbfile} = $dbfile;
+	$self -> redirect_to('/database/');
+};
 
 get '/table/structure/:table_name' => sub {
 	my $self = shift;
 	my $table = $self->param('table_name');
-	my $conn = DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1});
-	my $table_structure = $conn->selectall_arrayref( qq { PRAGMA table_info($table) }, { Slice => {} });
+	my $table_structure = $self->db->selectall_arrayref( qq { PRAGMA table_info($table) }, { Slice => {} });
 	$self->stash( 'table' => $table_structure );
 	$self -> render;
 } => 'table';
@@ -30,9 +44,10 @@ get '/table/structure/:table_name' => sub {
 get '/table/browse/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
-	my $conn = DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1});
-	my $records = $conn->selectall_arrayref( qq { SELECT * FROM $table_name }, { Slice => {} });
-	my $table_info = $conn->selectall_arrayref( qq { PRAGMA table_info($table_name) }, { Slice => {} });
+
+	my $records = $self->db->selectall_arrayref( qq { SELECT * FROM $table_name }, { Slice => {} });
+	my $table_info = $self->db->selectall_arrayref( qq { PRAGMA table_info($table_name) }, { Slice => {} });
+
 	$self->stash('records' => $records);
 	$self->stash('columns' => $table_info);
 	$self->render;
@@ -41,8 +56,7 @@ get '/table/browse/:table_name' => sub {
 get '/table/insert/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
-	my $conn = DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1});
-	my $table_info = $conn->selectall_arrayref( qq { PRAGMA table_info($table_name) }, { Slice => {} });
+	my $table_info = $self->db->selectall_arrayref( qq { PRAGMA table_info($table_name) }, { Slice => {} });
 	$self->stash('columns' => $table_info);
 	$self->render;
 } => 'insert';
@@ -50,20 +64,22 @@ get '/table/insert/:table_name' => sub {
 post '/table/insert/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
-	my $conn = DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1});
-	my $table_info = $conn->selectall_arrayref( qq { PRAGMA table_info($table_name) }, { Slice => {} });
+	my $table_info = $self->db->selectall_arrayref( qq { PRAGMA table_info($table_name) }, { Slice => {} });
 	my @columns;
 	my @values;
+
 	foreach my $column (@$table_info) {
 		if(!$column->{pk}) {
 			push(@columns, $column->{name});
 			push(@values, "'".$self->param($column->{name})."'");
 		}
 	}
+
 	my $query_columns = join ', ', @columns;
 	my $query_values = join ', ', @values;
 	my $query = 'INSERT INTO '.$table_name.' ('.$query_columns.') VALUES ('.$query_values.')';
-	my $result = $conn->do($query) or die $conn->errstr;
+
+	my $result = $self->db->do($query) or die $self->db->errstr;
 	$self->redirect_to('/database/');
 };
 
@@ -76,11 +92,11 @@ get '/table/new' => sub {
 
 post '/table/new' => sub {
 	my $self = shift;
-	my $conn = DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1});
 	my $table_name = $self->param('table_name');
 	my $table_cols_num = $self->param('table_cols_num');
 	my $i = 1;
 	my $query = qq { CREATE TABLE $table_name ( \n};
+
 	while ( $table_cols_num >= $i ) {
 		$query .= $self->param('column_'.$i.'_name') . ' ' . $self->param('column_'.$i.'_type');
 		if( $self->param('column_'.$i.'_pk') ) { $query .= ' primary key'; }
@@ -92,20 +108,18 @@ post '/table/new' => sub {
 		}
 		if($i != $table_cols_num) { $query .= ','; }
 		$query .= "\n";
-		print $i."\n";
 		$i++;
 	}
 	$query .= "\n )";
-	print $query;
-	my $result = $conn->do($query) or die $conn->errstr;
+
+	my $result = $self->db->do($query) or die $self->db->errstr;
 	$self->redirect_to('/database/');
 };
 
 get '/table/drop/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
-	my $conn = DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1});
-	my $drop_result = $conn->do( qq { DROP TABLE $table_name }, undef) or die $conn->errstr;
+	my $drop_result = $self->db->do( qq { DROP TABLE $table_name }, undef) or die $self->db->errstr;
 	if( $drop_result )
 	{
 		$self->flash('success' => 'Table '.$table_name.' succesfully dropped.');
@@ -114,14 +128,8 @@ get '/table/drop/:table_name' => sub {
 	{
 		$self->flash('error' => 'There was an error while trying to drop table '.$table_name.'. Please try again later!');
 	}
-	$self->redirect_to('/database/');
-};
 
-post '/database/choose' => sub {
-	my $self = shift;
-	my $dbfile = $self->param('dbfile');
-	$self -> session->{dbfile} = $dbfile;
-	$self -> redirect_to('/database/');
+	$self->redirect_to('/database/');
 };
 
 app->start;
