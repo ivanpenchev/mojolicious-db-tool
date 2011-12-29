@@ -10,17 +10,19 @@ Developed by Ivan Penchev for Google Code-in Contest.
 HOW-TO INSTALL
 --------------
 
-1. Install Perl - http://learn.perl.org/installing/
-2. Download the mojolicioud-db-tool application from github and install it through cmd/terminal:
+* Install Perl - http://learn.perl.org/installing/
+* Download the mojolicioud-db-tool application from github and install it through cmd/terminal:
+<pre>
 perl Makefile.PL
-cpanm --installdeps .
+cpanm --installdeps
+</pre>
 
-Note that if  you don't have cpanm, you can install it like this:
-$ curl -L cpanmin.us | perl - --sudo App::cpanminus
+*Note that if  you don't have cpanm, you can install it like this:*
+<pre>$ curl -L cpanmin.us | perl - --sudo App::cpanminus</pre>
 
-3. Start the application:
+* Start the application:
 /path/to/managedb.pl daemon
-4. Open your browser and load the app's home page which should be http://127.0.0.1:3000/.
+* Open your browser and load the app's home page which should be http://127.0.0.1:3000/.
 Enter the path to the database file you want to manage. 
 *Note that if the db file doesn't exist it will be automatically created.*
 
