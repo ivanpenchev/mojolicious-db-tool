@@ -117,6 +117,24 @@ post '/table/new' => sub {
 	$self->redirect_to('/database/');
 };
 
+get '/table/empty/:table_name' => sub {
+	my $self = shift;
+	my $table_name = $self->param('table_name');
+
+	my $empty_result = $self->db->do( qq { DELETE FROM $table_name }, undef) or die $self->db->errstr;
+	$self->db->do( qq { VACUUM }) or die $self->db->errstr;
+	if( $empty_result )
+	{
+		$self->flash('success' => 'Table '.$table_name.' succesfully emptied.');
+	}
+	else
+	{
+		$self->flash('error' => 'There was an error while trying to empty table '.$table_name.'. Please try again later!');
+	}
+
+	$self->redirect_to('/database/');
+};
+
 get '/table/drop/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -256,6 +274,7 @@ __DATA__
 						<a href="/table/browse/<%= $table->{name} %>">Browse</a> | 
 						<a href="/table/structure/<%= $table->{name} %>">Structure</a> | 
 						<a href="/table/insert/<%= $table->{name} %>"><span class="label success">Insert</span></a> | 
+						<a href="/table/empty/<%= $table->{name} %>"><span class="label warning">Empty</span></a> | 
 						<a href="/table/drop/<%= $table->{name} %>"><span class="label important">Drop</span></a> 
 					</td> 
 					<td></td>
