@@ -102,6 +102,7 @@ post '/table/new' => sub {
 		if( $self->param('column_'.$i.'_pk') ) { $query .= ' primary key'; }
 		if( $self->param('column_'.$i.'_ai') ) { $query .= ' autoincrement'; }
 		if( $self->param('column_'.$i.'_notnull') ) { $query .= ' not null'; }
+		if( $self->param('column_'.$i.'_unique') ) { $query .= ' UNIQUE'; }
 		if( $self->param('column_'.$i.'_default') )
 		{
 			$query .= 'default '.$self->param('column_'.$i.'_default');
@@ -180,7 +181,7 @@ __DATA__
 <form method="post" action="">
 	<table>
 		<thead>
-			<tr> <th> Column </th> <th> Type </th> <th> Default </th> <th>Primary Key</th> <th> Auto Increment </th> <th>NOT NULL</th> </tr>
+			<tr> <th> Column </th> <th> Type </th> <th> Default </th> <th>Primary Key</th> <th> Auto Increment </th> <th>NOT NULL</th> <th>Unique</th> </tr>
 		</thead>
 		<tbody>
 			% my $i = 1;
@@ -209,6 +210,7 @@ __DATA__
 					<td> <input type="checkbox" name="column_<%= $i %>_pk" /> </td>
 					<td> <input type="checkbox" name="column_<%= $i %>_ai" /> </td>
 					<td> <input type="checkbox" name="column_<%= $i %>_notnull" /> </td>
+					<td> <input type="checkbox" name="column_<%= $i %>_unique" /> </td>
 				</tr>
 
 			% 	$i++;	
@@ -278,6 +280,7 @@ __DATA__
 		</div>
 	</div>
 	<div class="actions" style="text-align: center; padding-left: 0;">
+		<a href="/" class="btn">Select Database</a>
 		<input type="submit" class="btn primary" value="Create">
 	</div>
 </form>
@@ -319,13 +322,13 @@ __DATA__
 	<thead>
 		<tr> 
 			<th class="header">#</th> <th class="yellow">Column</th> <th class="blue">Type</th> <th>Not NULL</th> 
-			<th class="green">Primary Key</th> 
+			<th class="green">Primary Key</th> <th>Unique</th>
 		</tr>
 	</thead>
 	<tbody>
 		% foreach my $row (@$table) {
 			<tr> 
-				<td style="width:15px;"><%= $row->{cid} %></td> <td><%= $row->{name} %></td> <td> <%= $row->{type} %></td> 
+				<td style="width:15px;"><%= $row->{cid} %></td> <td><%= $row->{name} %></td>
 				<td> <%= $row->{notnull} %></td> <td> <%= $row->{pk} %> </td>
 			</tr>
 		% }
