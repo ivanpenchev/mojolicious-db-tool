@@ -333,7 +333,7 @@ __DATA__
 </div>
 
 @@ table.html.ep
-% title 'Table structure';
+% title 'Table structure: '.$table_name;
 % layout 'main';
 <h2>Table: <%= $table_name %></h2>
 <hr />

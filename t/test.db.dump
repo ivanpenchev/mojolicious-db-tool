@@ -1,0 +1,15 @@
+create table first (
+    foo text,
+    bar text
+);
+
+insert into first (foo, bar) values ('O', 'HAI!');
+insert into first (foo, bar) values ('WAS', 'SUP?');
+
+create table second (
+    baz  integer,
+    quux text
+);
+
+insert into second (baz, quux) values (99, 'bottles of beer');
+insert into second (baz, quux) values (42, 'is the answer');
