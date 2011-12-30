@@ -32,7 +32,7 @@ post '/database/choose' => sub {
 	my $dbfile = $self->param('dbfile');
 	
 	$self -> session->{dbfile} = $dbfile;
-	$self -> redirect_to($self->url_for('/database/'));
+	$self -> redirect_to('/database/');
 };
 
 # tested
