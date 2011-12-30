@@ -158,7 +158,7 @@ __DATA__
 @@ index.html.ep
 % title 'Choosing SQLite database file';
 % layout 'main';
-<form method="post" action="<%= url_for '/database/choose' %>">
+<form method="post" action="<%= url_for 'database/choose' %>">
 	<h3>Select SQLite database file:</h3>
 	<hr />
 	<div class="clearfix">
@@ -187,7 +187,7 @@ __DATA__
 		</div>
 	% }
 	<div class="actions">
-		<a href="<%= url_for '/database/' %>" title="Back" class="btn primary">Back</a>
+		<a href="<%= url_for 'database' %>" title="Back" class="btn primary">Back</a>
 		<input type="submit" name="insert" class="btn success" value="Insert">
 	</div>
 </form>
@@ -269,13 +269,13 @@ __DATA__
 		<tbody>
 			% foreach my $table (@$tables) {
 				<tr> 
-					<td><a href="<%= url_for '/table/structure/', table_name => $table->{name} %>" title="<%= $table->{name} %>"><%= $table->{name} %> </a></td> 
+					<td><a href="<%= url_for 'table', table_name => $table->{name} %>" title="<%= $table->{name} %>"><%= $table->{name} %> </a></td> 
 					<td> 
-						<a href="<%= url_for '/table/browse/', table_name => $table->{name} %>">Browse</a> | 
-						<a href="<%= url_for '/table/structure/', table_name => $table->{name} %>">Structure</a> | 
-						<a href="<%= url_for '/table/insert/', table_name => $table->{name} %>"><span class="label success">Insert</span></a> | 
-						<a href="<%= url_for '/table/empty/', table_name => $table->{name} %>"><span class="label warning">Empty</span></a> | 
-						<a href="<%= url_for '/table/drop/', table_name => $table->{name} %>"><span class="label important">Drop</span></a> 
+						<a href="<%= url_for 'browse', table_name => $table->{name} %>">Browse</a> | 
+						<a href="<%= url_for 'table', table_name => $table->{name} %>">Structure</a> | 
+						<a href="<%= url_for 'insert', table_name => $table->{name} %>"><span class="label success">Insert</span></a> | 
+						<a href="<%= url_for '/table/empty/'.$table->{name} %>"><span class="label warning">Empty</span></a> | 
+						<a href="<%= url_for '/table/drop/'.$table->{name} %>"><span class="label important">Drop</span></a> 
 					</td> 
 					<td></td>
 				</tr>
@@ -299,7 +299,7 @@ __DATA__
 		</div>
 	</div>
 	<div class="actions" style="text-align: center; padding-left: 0;">
-		<a href="<%= url_for '/' %>" class="btn">Select Database</a>
+		<a href="<%= url_for 'index' %>" class="btn">Select Database</a>
 		<input type="submit" class="btn primary" value="Create">
 	</div>
 </form>
@@ -332,8 +332,8 @@ __DATA__
 	<p> There aren't any records in this table yet. </p> 	
 % }
 <div style="text-align: center">
-	<a href="<%= url_for '/database' %>" class="btn large primary">Back</a>
-	<a href="<%= url_for '/table/insert/', table_name => $table_name %>" class="btn large success">Insert</a>
+	<a href="<%= url_for 'database' %>" class="btn large primary">Back</a>
+	<a href="<%= url_for 'insert', table_name => $table_name %>" class="btn large success">Insert</a>
 </div>
 
 @@ table.html.ep
@@ -360,7 +360,7 @@ __DATA__
 </table>
 <div style="text-align: center">
 	<a href="<%= url_for '/database' %>" class="btn large primary">Back</a>
-	<a href="<%= url_for '/table/browse/', table_name => $table_name %>" class="btn large success">Browse Records</a>
+	<a href="<%= url_for 'browse', table_name => $table_name %>" class="btn large success">Browse Records</a>
 </div>
 
 @@ layouts/main.html.ep
