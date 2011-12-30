@@ -10,12 +10,13 @@ helper db => sub {
 	return DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1}) if
 		defined $self->session->{dbfile};
 
-	$self->redirect_to($self->url_for('/'));
+	$self->redirect_to('/');
 	return;
 };
 
 get '/' => 'index';
 
+# tested
 get '/database' => sub {
 	my $self = shift;
 	my $tables = $self->db->selectall_arrayref( qq{ SELECT * FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence' }, { Slice => {} });
@@ -25,6 +26,7 @@ get '/database' => sub {
 	$self -> render;
 } => 'database';
 
+# tested
 post '/database/choose' => sub {
 	my $self = shift;
 	my $dbfile = $self->param('dbfile');
@@ -33,6 +35,7 @@ post '/database/choose' => sub {
 	$self -> redirect_to($self->url_for('/database/'));
 };
 
+# tested
 get '/table/structure/:table_name' => sub {
 	my $self = shift;
 	my $table = $self->param('table_name');
@@ -41,6 +44,7 @@ get '/table/structure/:table_name' => sub {
 	$self -> render;
 } => 'table';
 
+# tested
 get '/table/browse/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -53,6 +57,7 @@ get '/table/browse/:table_name' => sub {
 	$self->render;
 } => 'browse';
 
+# tested
 get '/table/insert/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -61,6 +66,7 @@ get '/table/insert/:table_name' => sub {
 	$self->render;
 } => 'insert';
 
+# tested
 post '/table/insert/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -80,9 +86,10 @@ post '/table/insert/:table_name' => sub {
 	my $query = 'INSERT INTO '.$table_name.' ('.$query_columns.') VALUES ('.$query_values.')';
 
 	my $result = $self->db->do($query) or die $self->db->errstr;
-	$self->redirect_to($self->url_for('/database/'));
+	$self->redirect_to('/database/');
 };
 
+# tested
 get '/table/new' => sub {
 	my $self = shift;
 	$self->stash('table_name' => $self->param('table_name'));
@@ -90,6 +97,7 @@ get '/table/new' => sub {
 	$self->render;
 } => 'new-table';
 
+# tested
 post '/table/new' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -105,7 +113,7 @@ post '/table/new' => sub {
 		if( $self->param('column_'.$i.'_unique') ) { $query .= ' UNIQUE'; }
 		if( $self->param('column_'.$i.'_default') )
 		{
-			$query .= 'default '.$self->param('column_'.$i.'_default');
+			$query .= ' default '.$self->param('column_'.$i.'_default');
 		}
 		if($i != $table_cols_num) { $query .= ','; }
 		$query .= "\n";
@@ -114,7 +122,7 @@ post '/table/new' => sub {
 	$query .= "\n )";
 
 	my $result = $self->db->do($query) or die $self->db->errstr;
-	$self->redirect_to($self->url_for('/database/'));
+	$self->redirect_to('/database/');
 };
 
 get '/table/empty/:table_name' => sub {
@@ -132,7 +140,7 @@ get '/table/empty/:table_name' => sub {
 		$self->flash('error' => 'There was an error while trying to empty table '.$table_name.'. Please try again later!');
 	}
 
-	$self->redirect_to($self->url_for('/database/'));
+	$self->redirect_to('/database/');
 };
 
 get '/table/drop/:table_name' => sub {
@@ -148,7 +156,7 @@ get '/table/drop/:table_name' => sub {
 		$self->flash('error' => 'There was an error while trying to drop table '.$table_name.'. Please try again later!');
 	}
 
-	$self->redirect_to($self->url_for('/database/'));
+	$self->redirect_to('/database/');
 };
 
 app->start;
@@ -158,7 +166,7 @@ __DATA__
 @@ index.html.ep
 % title 'Choosing SQLite database file';
 % layout 'main';
-<form method="post" action="<%= $self->url_for('/database/choose') %>">
+<form method="post" action="<%= url_for '/database/choose' %>">
 	<h3>Select SQLite database file:</h3>
 	<hr />
 	<div class="clearfix">
@@ -173,7 +181,7 @@ __DATA__
 </form>
 
 @@ insert.html.ep
-% title 'Insert element into table'.$table_name;
+% title 'Insert element into table '.$table_name;
 % layout 'main';
 <h2>Insert</h2>
 <hr />
@@ -187,7 +195,7 @@ __DATA__
 		</div>
 	% }
 	<div class="actions">
-		<a href="<%= $self->url_for('/database/') %>" title="Back" class="btn primary">Back</a>
+		<a href="<%= url_for '/database/' %>" title="Back" class="btn primary">Back</a>
 		<input type="submit" name="insert" class="btn success" value="Insert">
 	</div>
 </form>
@@ -236,7 +244,7 @@ __DATA__
 		</tbody>
 	</table>
 	<div class="actions" style="text-align: center; padding-left: 0;">
-		<a href="<%= $self->url_for('/database/') %>" title="Back" class="btn primary">Back</a>
+		<a href="<%= url_for '/database/' %>" title="Back" class="btn primary">Back</a>
 		<input type="submit" name="insert" class="btn success" value="Create">
 	</div>
 </form>
@@ -269,13 +277,13 @@ __DATA__
 		<tbody>
 			% foreach my $table (@$tables) {
 				<tr> 
-					<td><a href="<%= $self->url_for('/table/structure/'.$table->{name}) %>" title="<%= $table->{name} %>"><%= $table->{name} %> </a></td> 
+					<td><a href="<%= url_for '/table/structure/', table_name => $table->{name} %>" title="<%= $table->{name} %>"><%= $table->{name} %> </a></td> 
 					<td> 
-						<a href="<%= $self->url_for('/table/browse/'.$table->{name}) %>">Browse</a> | 
-						<a href="<%= $self->url_for('/table/structure/'.$table->{name}) %>">Structure</a> | 
-						<a href="<%= $self->url_for('/table/insert/'.$table->{name}) %>"><span class="label success">Insert</span></a> | 
-						<a href="<%= $self->url_for('/table/empty/'.$table->{name}) %>"><span class="label warning">Empty</span></a> | 
-						<a href="<%= $self->url_for('/table/drop/'.$table->{name}) %>"><span class="label important">Drop</span></a> 
+						<a href="<%= url_for '/table/browse/', table_name => $table->{name} %>">Browse</a> | 
+						<a href="<%= url_for '/table/structure/', table_name => $table->{name} %>">Structure</a> | 
+						<a href="<%= url_for '/table/insert/', table_name => $table->{name} %>"><span class="label success">Insert</span></a> | 
+						<a href="<%= url_for '/table/empty/', table_name => $table->{name} %>"><span class="label warning">Empty</span></a> | 
+						<a href="<%= url_for '/table/drop/', table_name => $table->{name} %>"><span class="label important">Drop</span></a> 
 					</td> 
 					<td></td>
 				</tr>
@@ -285,7 +293,7 @@ __DATA__
 % } else {
 	<p> There aren't any tables in this database yet. </p>
 % }
-<form method="get" action="<%= $self->url_for('/table/new') %>">
+<form method="get" action="<%= url_for '/table/new' %>">
 	<h4> Create new table </h4>
 	<div class="clearfix">
 		<div class="input">
@@ -299,7 +307,7 @@ __DATA__
 		</div>
 	</div>
 	<div class="actions" style="text-align: center; padding-left: 0;">
-		<a href="<%= $self->url_for('/') %>" class="btn">Select Database</a>
+		<a href="<%= url_for '/' %>" class="btn">Select Database</a>
 		<input type="submit" class="btn primary" value="Create">
 	</div>
 </form>
@@ -309,27 +317,31 @@ __DATA__
 % layout 'main';
 <h2>Table: <%= $table_name %></h2>
 <hr />
-<table class="zebra-striped">
-	<thead>
-		<tr> 
-			% foreach my $column (@$columns) {
-				<th class="header"><%= $column->{name} %></th>
-			% }
-		</tr>
-	</thead>
-	<tbody>
-		% foreach my $record (@$records) {
-			<tr>
-			% foreach my $column (@$columns) { 
-					<td style="width:15px;"><%= $record->{$column->{name}} %></td> 
-			% }
+% if(@$records) {
+	<table class="zebra-striped">
+		<thead>
+			<tr> 
+				% foreach my $column (@$columns) {
+					<th class="header"><%= $column->{name} %></th>
+				% }
 			</tr>
-		%}
-	</tbody>
-</table>
+		</thead>
+		<tbody>
+			% foreach my $record (@$records) {
+				<tr>
+				% foreach my $column (@$columns) { 
+						<td style="width:15px;"><%= $record->{$column->{name}} %></td> 
+				% }
+				</tr>
+			%}
+		</tbody>
+	</table>
+% } else {
+	<p> There aren't any records in this table yet. </p> 	
+% }
 <div style="text-align: center">
-	<a href="<%= $self->url_for('/database') %>" class="btn large primary">Back</a>
-	<a href="<%= $self->url_for('/table/insert/'.$table_name) %>" class="btn large success">Insert</a>
+	<a href="<%= url_for '/database' %>" class="btn large primary">Back</a>
+	<a href="<%= url_for '/table/insert/', table_name => $table_name %>" class="btn large success">Insert</a>
 </div>
 
 @@ table.html.ep
@@ -355,8 +367,8 @@ __DATA__
 	</tbody>
 </table>
 <div style="text-align: center">
-	<a href="<%= $self->url_for('/database') %>" class="btn large primary">Back</a>
-	<a href="<%= $self->url_for('/table/browse/'.$table_name) %>" class="btn large success">Browse Records</a>
+	<a href="<%= url_for '/database' %>" class="btn large primary">Back</a>
+	<a href="<%= url_for '/table/browse/', table_name => $table_name %>" class="btn large success">Browse Records</a>
 </div>
 
 @@ layouts/main.html.ep
@@ -365,7 +377,7 @@ __DATA__
 	<head>
 		<title>SQLite Database Managemenet - Mojolicious::Lite - <%= title %></title>
 		<link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css">
-		<script type="text/javascript" src="<%= $self->url_for('js/bootstrap-alerts.js') %>"></script>
+		<script type="text/javascript" src="<%= url_for 'js/bootstrap-alerts.js' %>"></script>
 		<style>
 		  /* Override some defaults */
 		  html, body {
