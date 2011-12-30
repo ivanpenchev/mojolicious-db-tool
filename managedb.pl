@@ -16,7 +16,6 @@ helper db => sub {
 
 get '/' => 'index';
 
-# tested
 get '/database' => sub {
 	my $self = shift;
 	my $tables = $self->db->selectall_arrayref( qq{ SELECT * FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence' }, { Slice => {} });
@@ -26,7 +25,6 @@ get '/database' => sub {
 	$self -> render;
 } => 'database';
 
-# tested
 post '/database/choose' => sub {
 	my $self = shift;
 	my $dbfile = $self->param('dbfile');
@@ -35,7 +33,6 @@ post '/database/choose' => sub {
 	$self -> redirect_to('/database/');
 };
 
-# tested
 get '/table/structure/:table_name' => sub {
 	my $self = shift;
 	my $table = $self->param('table_name');
@@ -44,7 +41,6 @@ get '/table/structure/:table_name' => sub {
 	$self -> render;
 } => 'table';
 
-# tested
 get '/table/browse/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -57,7 +53,6 @@ get '/table/browse/:table_name' => sub {
 	$self->render;
 } => 'browse';
 
-# tested
 get '/table/insert/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -66,7 +61,6 @@ get '/table/insert/:table_name' => sub {
 	$self->render;
 } => 'insert';
 
-# tested
 post '/table/insert/:table_name' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
@@ -89,7 +83,6 @@ post '/table/insert/:table_name' => sub {
 	$self->redirect_to('/database/');
 };
 
-# tested
 get '/table/new' => sub {
 	my $self = shift;
 	$self->stash('table_name' => $self->param('table_name'));
@@ -97,7 +90,6 @@ get '/table/new' => sub {
 	$self->render;
 } => 'new-table';
 
-# tested
 post '/table/new' => sub {
 	my $self = shift;
 	my $table_name = $self->param('table_name');
