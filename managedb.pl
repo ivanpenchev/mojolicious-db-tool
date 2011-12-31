@@ -66,13 +66,12 @@ post '/table/insert/:table_name' => sub {
 	foreach my $column (@$table_info) {
 		if(!$column->{pk}) {
 			push(@columns, $column->{name});
-			push(@values, "'".$self->param($column->{name})."'");
+			push(@values, "'".$self->param($column->{name})."'"); 
 		}
 	}
 
 	my $query_columns = join ', ', @columns;
 	my $query_values = join ', ', @values;
-	# my $query = 'INSERT INTO ' . $table_name . ' ('.$query_columns.') VALUES ('.$query_values.')';
 
 	my $result = $self->db->do( qq { INSERT INTO $table_name ( $query_columns ) VALUES ( $query_values ) }) or die $self->db->errstr;
 	$self->redirect_to('/database/');
@@ -80,8 +79,16 @@ post '/table/insert/:table_name' => sub {
 
 get '/table/new' => sub {
 	my $self = shift;
+
 	$self->stash('table_name' => $self->param('table_name'));
-	$self->stash('table_cols_num' => $self->param('table_cols_num'));
+	if( $self->param('table_cols_num') )
+	{
+		$self->stash('table_cols_num' => $self->param('table_cols_num'));
+	}
+	else
+	{
+		$self->stash('table_cols_num', 2);
+	}
 } => 'new-table';
 
 post '/table/new' => sub {
@@ -191,6 +198,15 @@ __DATA__
 % layout 'main';
 <h2>Create new table &raquo; <%= $table_name %></h2>
 <form method="post" action="">
+	% if ( ! $table_name ) {
+		<div class="clearfix">
+			<label>Table name </label>
+			<div class="input">
+				<input type="text" name="table_name" />
+			</div>
+		</div>	
+	% }
+	<input type="hidden" name="table_cols_num" value="<%= $table_cols_num %>" />
 	<table>
 		<thead>
 			<tr> <th> Column </th> <th> Type </th> <th> Default </th> <th>Primary Key</th> <th> Auto Increment </th> <th>NOT NULL</th> <th>Unique</th> </tr>
