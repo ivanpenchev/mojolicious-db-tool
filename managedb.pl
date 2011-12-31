@@ -1,13 +1,13 @@
 use Mojolicious::Lite;
 use DBI;
 
-my $ver = '0.1.1';
+my $ver = '0.1.2';
 app->secret('hDfj3LkNr57wsV');
 
 helper db => sub {
 	my $self = shift;
 
-	return DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode=>1}) if
+	return DBI->connect('dbi:SQLite:dbname='.$self->session->{dbfile}, '', '', {sqlite_unicode => 1}) if
 		defined $self->session->{dbfile};
 
 	$self->redirect_to('/');
@@ -20,25 +20,22 @@ get '/database' => sub {
 	my $self = shift;
 	my $tables = $self->db->selectall_arrayref( qq{ SELECT * FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence' }, { Slice => {} });
 
-	$self -> stash('database' => $self->session->{dbfile});
 	$self -> stash('tables' => $tables);
-	$self -> render;
 } => 'database';
 
 post '/database/choose' => sub {
 	my $self = shift;
 	my $dbfile = $self->param('dbfile');
 	
-	$self -> session->{dbfile} = $dbfile;
+	$self -> session({dbfile => $dbfile});
 	$self -> redirect_to('/database/');
-};
+} => 'choose_database';
 
 get '/table/structure/:table_name' => sub {
 	my $self = shift;
 	my $table = $self->param('table_name');
 	my $table_structure = $self->db->selectall_arrayref( qq { PRAGMA table_info($table) }, { Slice => {} });
 	$self->stash( 'table' => $table_structure );
-	$self -> render;
 } => 'table';
 
 get '/table/browse/:table_name' => sub {
@@ -50,7 +47,6 @@ get '/table/browse/:table_name' => sub {
 
 	$self->stash('records' => $records);
 	$self->stash('columns' => $table_info);
-	$self->render;
 } => 'browse';
 
 get '/table/insert/:table_name' => sub {
@@ -58,7 +54,6 @@ get '/table/insert/:table_name' => sub {
 	my $table_name = $self->param('table_name');
 	my $table_info = $self->db->selectall_arrayref( qq { PRAGMA table_info($table_name) }, { Slice => {} });
 	$self->stash('columns' => $table_info);
-	$self->render;
 } => 'insert';
 
 post '/table/insert/:table_name' => sub {
@@ -77,9 +72,9 @@ post '/table/insert/:table_name' => sub {
 
 	my $query_columns = join ', ', @columns;
 	my $query_values = join ', ', @values;
-	my $query = 'INSERT INTO '.$table_name.' ('.$query_columns.') VALUES ('.$query_values.')';
+	# my $query = 'INSERT INTO ' . $table_name . ' ('.$query_columns.') VALUES ('.$query_values.')';
 
-	my $result = $self->db->do($query) or die $self->db->errstr;
+	my $result = $self->db->do( qq { INSERT INTO $table_name ( $query_columns ) VALUES ( $query_values ) }) or die $self->db->errstr;
 	$self->redirect_to('/database/');
 };
 
@@ -87,7 +82,6 @@ get '/table/new' => sub {
 	my $self = shift;
 	$self->stash('table_name' => $self->param('table_name'));
 	$self->stash('table_cols_num' => $self->param('table_cols_num'));
-	$self->render;
 } => 'new-table';
 
 post '/table/new' => sub {
@@ -115,7 +109,7 @@ post '/table/new' => sub {
 
 	my $result = $self->db->do($query) or die $self->db->errstr;
 	$self->redirect_to('/database/');
-};
+} => 'new_table';
 
 get '/table/empty/:table_name' => sub {
 	my $self = shift;
@@ -133,7 +127,7 @@ get '/table/empty/:table_name' => sub {
 	}
 
 	$self->redirect_to('/database/');
-};
+} => 'empty_table';
 
 get '/table/drop/:table_name' => sub {
 	my $self = shift;
@@ -149,7 +143,7 @@ get '/table/drop/:table_name' => sub {
 	}
 
 	$self->redirect_to('/database/');
-};
+} => 'drop_table';
 
 app->start;
 
@@ -158,7 +152,7 @@ __DATA__
 @@ index.html.ep
 % title 'Choosing SQLite database file';
 % layout 'main';
-<form method="post" action="<%= url_for 'database/choose' %>">
+<form method="post" action="<%= url_for 'choose_database' %>">
 	<h3>Select SQLite database file:</h3>
 	<hr />
 	<div class="clearfix">
@@ -236,7 +230,7 @@ __DATA__
 		</tbody>
 	</table>
 	<div class="actions" style="text-align: center; padding-left: 0;">
-		<a href="<%= url_for '/database/' %>" title="Back" class="btn primary">Back</a>
+		<a href="<%= url_for 'database' %>" title="Back" class="btn primary">Back</a>
 		<input type="submit" name="insert" class="btn success" value="Create">
 	</div>
 </form>
@@ -257,7 +251,7 @@ __DATA__
 		<p><strong><%= flash 'success' %></strong></p>
 	</div>
 % }
-<h2> <%= $database %>
+<h2> <%= session 'dbfile' %>
 <hr />
 <h2> Current Tables </h2>
 <hr />
@@ -274,8 +268,8 @@ __DATA__
 						<a href="<%= url_for 'browse', table_name => $table->{name} %>">Browse</a> | 
 						<a href="<%= url_for 'table', table_name => $table->{name} %>">Structure</a> | 
 						<a href="<%= url_for 'insert', table_name => $table->{name} %>"><span class="label success">Insert</span></a> | 
-						<a href="<%= url_for '/table/empty/'.$table->{name} %>"><span class="label warning">Empty</span></a> | 
-						<a href="<%= url_for '/table/drop/'.$table->{name} %>"><span class="label important">Drop</span></a> 
+						<a href="<%= url_for 'empty_table', table_name => $table->{name} %>"><span class="label warning">Empty</span></a> | 
+						<a href="<%= url_for 'drop_table', table_name => $table->{name} %>"><span class="label important">Drop</span></a> 
 					</td> 
 					<td></td>
 				</tr>
@@ -384,10 +378,6 @@ __DATA__
 			text-align: center; /* center align it with the container */
 		  }
 
-		  .container {
-			width: 820px; /* downsize our container to make the content feel a bit tighter and more cohesive. NOTE: this removes two full columns from the grid, meaning you only go to 14 columns and not 16. */
-		  }
-
 		  /* The white background content wrapper */
 		  .content {
 			background-color: #fff;
@@ -426,7 +416,7 @@ __DATA__
 			<div class="content">
 
 				<div class="row">
-					<div class="span14">
+					<div class="span16">
 						<%= content %>
 					</div>
 				</div>
